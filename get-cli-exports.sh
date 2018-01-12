@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# Switch to kube-system namespace
-kubens kube-system
-
 while [ 1 -eq 1 ]; do
-    ipAddress=$(kubectl get service storageos-lb -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    ipAddress=$(kubectl get service storageos-lb --namespace=kube-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
     if [[ $ipAddress == "" ]]; then
         # no record yet - nothing to do
@@ -19,7 +16,3 @@ while [ 1 -eq 1 ]; do
 
     sleep 5s
 done
-
-# Revert namespace
-kubens -
-

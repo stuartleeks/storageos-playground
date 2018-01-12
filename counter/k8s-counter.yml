@@ -1,0 +1,68 @@
+# redis pod
+apiVersion: v1
+kind: Pod
+metadata: 
+  labels:
+    app: redis
+  name: redis 
+spec:
+  containers:
+  - name: redis
+    image: redis
+    ports:
+    - name: redisport
+      containerPort: 6379
+    volumeMounts: 
+    - name: redis-persistent-storage
+      mountPath: /data/redis
+  volumes:
+  - name: redis-persistent-storage
+    emptyDir: {}
+
+---
+# redis service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector:
+    app: redis
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: redisport
+
+---
+# counter pod
+apiVersion: v1
+kind: Pod
+metadata: 
+  labels:
+    app: counter
+  name: counter
+spec:
+  containers:
+  - name: counter
+    image: andersjanmyr/counter
+    env:
+    - name: REDIS_URL
+      value: redis:6379
+    ports:
+    - name: http
+      containerPort: 80
+
+---
+# redis service
+apiVersion: v1
+kind: Service
+metadata:
+  name: counter
+spec:
+  selector:
+    app: counter
+  type: LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: http
