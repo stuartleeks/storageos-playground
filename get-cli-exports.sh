@@ -11,6 +11,8 @@ while [ 1 -eq 1 ]; do
         echo "Run: 'export STORAGEOS_HOST=$ipAddress:5705'"
         echo "... and ensure that STORAGEOS_USERNAME and STORAGEOS_PASSWORD are set (e.g. in .bashrc)"
         echo "... then run 'storageos cluster health' to check connection"
+        echo ""
+        echo "When deploying via k8s, use $(echo -n "tcp://$ipAddress:5705" | base64) as the apiAddress secret value"
         exit 0
     fi
 
