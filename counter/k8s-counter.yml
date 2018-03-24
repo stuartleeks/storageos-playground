@@ -18,7 +18,6 @@ spec:
   volumes:
   - name: redis-persistent-storage
     emptyDir: {}
-
 ---
 # redis service
 apiVersion: v1

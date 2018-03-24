@@ -5,7 +5,7 @@ metadata:
 type: "kubernetes.io/storageos"
 data:
   # set apiAddress to tcp://host:5705. Base64 encode with `echo tcp://myhost:5705 | base64`. or use the output from ../get-cli-exports.sh
-  apiAddress: dGNwOi8vNDAuNjkuMzQuMTAxOjU3MDU=
+  apiAddress: dGNwOi8vNTIuMTY5Ljc3LjE3Mzo1NzA1
   # apiAddress: dGNwOi8vNTIuMTY5LjIuMjA3OjU3MDU= # tcp://52.169.2.207:5705 - externalip for lb - encoded via bing (k8sgates2)
   # apiAddress: dGNwOi8vNTIuMTY5LjI4Ljg2OjU3MDU= # tcp://52.169.28.86:5705 - externalip for lb - encoded via bing
   # apiAddress: dGNwOi8vNTIuMTY5LjI4Ljg2OjU3MDUK # tcp://52.169.28.86:5705 - externalip for lb
@@ -17,65 +17,49 @@ data:
 kind: StorageClass
 apiVersion: storage.k8s.io/v1beta1
 metadata:
-  name: storageos-redis
-provisioner: kubernetes.io/storageos
+  name: azure-managed-disk
+provisioner: kubernetes.io/azure-disk
 parameters:
-  pool: default
-  description: Kubernetes volume
-  fsType: ext4
-  adminSecretNamespace: default
-  adminSecretName: storageos-secret
+  kind: Managed
+  storageaccounttype: Standard_LRS
 
 ---
-
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: storageos-redis0001
+  name: azure-managed-disk
   annotations:
-    volume.beta.kubernetes.io/storage-class: storageos-redis
+    volume.beta.kubernetes.io/storage-class: azure-managed-disk
 spec:
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   resources:
     requests:
       storage: 5Gi
 
-
-
 ---
-# redis deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: redis-deployment
+# redis pod
+apiVersion: v1
+kind: Pod
+metadata: 
+  labels:
+    app: redis
+  name: redis 
 spec:
-  selector:
-    matchLabels:
-      app: redis
-  replicas: 1
-  template:
-    metadata: 
-      labels:
-        app: redis
-      name: redis 
-    spec:
-      containers:
-      - name: redis
-        image: redis
-        args:
-          - "--append-only"
-        ports:
-        - name: redisport
-          containerPort: 6379
-        volumeMounts:
-            - mountPath: /redis-master-data
-              name: redis-data
-      volumes:
-        - name: redis-data
-          persistentVolumeClaim:
-            claimName: storageos-redis0001
-        
+  containers:
+  - name: redis
+    image: redis
+    ports:
+    - name: redisport
+      containerPort: 6379
+    volumeMounts:
+        - mountPath: /redis-master-data
+          name: redis-data
+  volumes:
+    - name: redis-data
+      persistentVolumeClaim:
+        claimName: azure-managed-disk
+
 ---
 # redis service
 apiVersion: v1
